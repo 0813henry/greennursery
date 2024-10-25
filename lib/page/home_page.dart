@@ -1,9 +1,10 @@
 import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:greennursery/core/color.dart';
 import 'package:greennursery/data/category_model.dart';
 import 'package:greennursery/data/plant_data.dart';
+import 'package:greennursery/data/cart_model.dart';
+import 'package:greennursery/page/cart_page.dart';
 import 'package:greennursery/page/details_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -14,14 +15,14 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  // Controlador de página y estados
   late PageController controller;
-  int selectId = 0; // ID de la categoría seleccionada
-  int activePage = 0; // Página activa en el slider
+  int selectId = 0;
+  int activePage = 0;
+
+  final ShoppingCart cart = ShoppingCart(); // Instancia del carrito
 
   @override
   void initState() {
-    // Inicialización del controlador
     controller = PageController(viewportFraction: 0.6, initialPage: 0);
     super.initState();
   }
@@ -35,43 +36,45 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            buildSearchBar(), // Barra de búsqueda
-            buildCategorySelector(), // Selector de categorías
-            buildPlantSlider(), // Slider de plantas
-            buildPopularPlantsHeader(), // Encabezado para plantas populares
-            buildPopularPlantsList(), // Lista de plantas populares
+            buildSearchBar(),
+            buildCategorySelector(),
+            buildPlantSlider(),
+            buildPopularPlantsHeader(),
+            buildPopularPlantsList(),
           ],
         ),
       ),
     );
   }
 
-  // Fase 1: Crear la barra de navegación
   AppBar buildAppBar() {
     return AppBar(
       elevation: 0,
       backgroundColor: white,
       automaticallyImplyLeading: false,
-      leadingWidth: 40,
       leading: TextButton(
         onPressed: () {},
         child: Image.asset('assets/icons/menu.png'),
       ),
       actions: [
+        IconButton(
+          icon: Icon(Icons.shopping_cart, color: green),
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => CartPage(cart: cart),
+              ),
+            );
+          },
+        ),
         Container(
           height: 40.0,
           width: 40.0,
           margin: const EdgeInsets.only(right: 20, top: 10, bottom: 5),
           decoration: BoxDecoration(
             color: green,
-            boxShadow: [
-              BoxShadow(
-                color: green.withOpacity(0.5),
-                blurRadius: 10,
-                offset: const Offset(0, 0),
-              ),
-            ],
-            borderRadius: BorderRadius.circular(20.0),
+            shape: BoxShape.circle,
             image: const DecorationImage(
               image: AssetImage('assets/images/pro.png'),
             ),
@@ -81,7 +84,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Fase 2: Implementar la barra de búsqueda
   Padding buildSearchBar() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 20.0),
@@ -98,7 +100,6 @@ class _HomePageState extends State<HomePage> {
                 BoxShadow(
                   color: green.withOpacity(0.15),
                   blurRadius: 10,
-                  offset: const Offset(0, 0),
                 ),
               ],
               borderRadius: BorderRadius.circular(10.0),
@@ -106,7 +107,6 @@ class _HomePageState extends State<HomePage> {
             child: Row(
               children: [
                 const SizedBox(
-                  height: 45,
                   width: 250,
                   child: TextField(
                     decoration: InputDecoration(
@@ -115,10 +115,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
-                Image.asset(
-                  'assets/icons/search.png',
-                  height: 25,
-                )
+                Image.asset('assets/icons/search.png', height: 25),
               ],
             ),
           ),
@@ -128,14 +125,13 @@ class _HomePageState extends State<HomePage> {
             width: 45.0,
             decoration: BoxDecoration(
               color: green,
+              borderRadius: BorderRadius.circular(10.0),
               boxShadow: [
                 BoxShadow(
                   color: green.withOpacity(0.5),
                   blurRadius: 10,
-                  offset: const Offset(0, 0),
                 ),
               ],
-              borderRadius: BorderRadius.circular(10.0),
             ),
             child: Image.asset(
               'assets/icons/adjust.png',
@@ -148,53 +144,45 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Fase 3: Crear la sección de categorías
   SizedBox buildCategorySelector() {
     return SizedBox(
       height: 35.0,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          for (int i = 0; i < categories.length; i++)
-            GestureDetector(
-              onTap: () {
-                setState(() => selectId = categories[i].id);
-              },
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    categories[i].name,
-                    style: TextStyle(
-                      color: selectId == i ? green : black.withOpacity(0.7),
-                      fontSize: 16.0,
-                    ),
+        children: categories.map((category) {
+          return GestureDetector(
+            onTap: () => setState(() => selectId = category.id),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  category.name,
+                  style: TextStyle(
+                    color: selectId == category.id ? green : black.withOpacity(0.7),
+                    fontSize: 16.0,
                   ),
-                  if (selectId == i)
-                    const CircleAvatar(
-                      radius: 3,
-                      backgroundColor: green,
-                    )
-                ],
-              ),
+                ),
+                if (selectId == category.id)
+                  const CircleAvatar(
+                    radius: 3,
+                    backgroundColor: green,
+                  )
+              ],
             ),
-        ],
+          );
+        }).toList(),
       ),
     );
   }
 
-  // Fase 4: Crear el slider de plantas
   SizedBox buildPlantSlider() {
     return SizedBox(
       height: 320.0,
       child: PageView.builder(
         itemCount: plants.length,
         controller: controller,
-        physics: const BouncingScrollPhysics(),
-        padEnds: false,
-        pageSnapping: true,
         onPageChanged: (value) => setState(() => activePage = value),
-        itemBuilder: (itemBuilder, index) {
+        itemBuilder: (context, index) {
           bool active = index == activePage;
           return slider(active, index);
         },
@@ -202,25 +190,22 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Animación del slider
   AnimatedContainer slider(bool active, int index) {
     double margin = active ? 20 : 30;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 500),
-      curve: Curves.easeInOutCubic,
       margin: EdgeInsets.all(margin),
       child: mainPlantsCard(index),
     );
   }
 
-  // Tarjeta principal de plantas
   Widget mainPlantsCard(int index) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (builder) => DetailsPage(plant: plants[index]),
+            builder: (context) => DetailsPage(plant: plants[index], cart: cart),
           ),
         );
       },
@@ -228,28 +213,20 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.all(8.0),
         decoration: BoxDecoration(
           color: white,
+          border: Border.all(color: green, width: 2),
+          borderRadius: BorderRadius.circular(30.0),
           boxShadow: [
             BoxShadow(
               color: black.withOpacity(0.05),
               blurRadius: 15,
-              offset: const Offset(5, 5),
             ),
           ],
-          border: Border.all(color: green, width: 2),
-          borderRadius: BorderRadius.circular(30.0),
         ),
         child: Stack(
           children: [
             Container(
               decoration: BoxDecoration(
                 color: lightGreen,
-                boxShadow: [
-                  BoxShadow(
-                    color: black.withOpacity(0.05),
-                    blurRadius: 15,
-                    offset: const Offset(5, 5),
-                  ),
-                ],
                 borderRadius: BorderRadius.circular(25.0),
                 image: DecorationImage(
                   image: AssetImage(plants[index].imagePath),
@@ -263,11 +240,7 @@ class _HomePageState extends State<HomePage> {
               child: CircleAvatar(
                 backgroundColor: green,
                 radius: 15,
-                child: Image.asset(
-                  'assets/icons/add.png',
-                  color: white,
-                  height: 15,
-                ),
+                child: Icon(Icons.add, color: white, size: 15),
               ),
             ),
             Align(
@@ -290,7 +263,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // Fase 5: Encabezado para plantas populares
   Padding buildPopularPlantsHeader() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
@@ -299,27 +271,17 @@ class _HomePageState extends State<HomePage> {
         children: [
           const Text(
             'Plantas Populares',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           TextButton(
             onPressed: () {},
-            child: const Text(
-              'Ver todo',
-              style: TextStyle(
-                color: green,
-                fontSize: 16,
-              ),
-            ),
+            child: const Text('Ver todo', style: TextStyle(color: green, fontSize: 16)),
           ),
         ],
       ),
     );
   }
 
-  // Lista de plantas populares
   SizedBox buildPopularPlantsList() {
     return SizedBox(
       height: 200.0,
@@ -327,21 +289,18 @@ class _HomePageState extends State<HomePage> {
         padding: const EdgeInsets.only(left: 20.0),
         scrollDirection: Axis.horizontal,
         itemCount: plants.length,
-        itemBuilder: (context, index) {
-          return popularPlantCard(index);
-        },
+        itemBuilder: (context, index) => popularPlantCard(index),
       ),
     );
   }
 
-  // Tarjeta de planta popular
   Widget popularPlantCard(int index) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (builder) => DetailsPage(plant: plants[index]),
+            builder: (context) => DetailsPage(plant: plants[index], cart: cart),
           ),
         );
       },
@@ -355,7 +314,6 @@ class _HomePageState extends State<HomePage> {
             BoxShadow(
               color: black.withOpacity(0.05),
               blurRadius: 15,
-              offset: const Offset(5, 5),
             ),
           ],
         ),
@@ -372,18 +330,12 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 10.0),
             Text(
               plants[index].name,
-              style: const TextStyle(
-                fontSize: 16.0,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 16.0, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 5.0),
             Text(
               '\$${plants[index].price.toStringAsFixed(0)}',
-              style: const TextStyle(
-                fontSize: 14.0,
-                color: Colors.grey,
-              ),
+              style: const TextStyle(fontSize: 14.0, color: Colors.grey),
             ),
           ],
         ),
@@ -393,7 +345,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
-    controller.dispose(); // Liberar recursos
+    controller.dispose();
     super.dispose();
   }
 }

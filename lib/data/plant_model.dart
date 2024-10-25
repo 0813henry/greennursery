@@ -5,7 +5,7 @@ class Plants {
   final String category;
   final String description;
   final double price;
-  final bool isFavorit;
+  bool isFavorit;
 
   Plants({
     required this.id,
@@ -14,6 +14,6 @@ class Plants {
     required this.category,
     required this.description,
     required this.price,
-    required this.isFavorit,
+    this.isFavorit = false,
   });
 }

@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:greennursery/core/color.dart';
 import 'package:greennursery/widgets/bottom_nav.dart';
-import 'package:greennursery/page/create_account.dart'; // Asegúrate de tener este archivo creado
-import 'package:greennursery/page/forgot_password.dart'; // Asegúrate de tener este archivo creado
+import 'package:greennursery/page/create_account.dart';
+import 'package:greennursery/page/forgot_password.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -18,36 +18,76 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  void _login() async {
+  bool _isLoading = false; // Estado de carga
+
+  /// Función para manejar el inicio de sesión.
+  Future<void> _login() async {
     String email = _emailController.text.trim();
     String password = _passwordController.text.trim();
 
+    if (email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor ingresa correo y contraseña')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true; // Muestra el estado de carga
+    });
+
     try {
+      // Intento de inicio de sesión con Firebase
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
 
-      // Si el inicio de sesión es exitoso, navega a BottomNavBar
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const BottomNavBar()),
+      // Si el inicio de sesión es exitoso, redirige a BottomNavBar
+      if (userCredential.user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const BottomNavBar()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      // Manejo específico de errores de Firebase
+      String errorMessage;
+      switch (e.code) {
+        case 'invalid-email':
+          errorMessage = 'Correo electrónico no válido.';
+          break;
+        case 'user-not-found':
+          errorMessage = 'No se encontró el usuario.';
+          break;
+        case 'wrong-password':
+          errorMessage = 'Contraseña incorrecta.';
+          break;
+        default:
+          errorMessage = 'Error: ${e.message}';
+      }
+      // Mostrar mensaje de error con SnackBar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
       );
     } catch (e) {
-      // Manejar el error de inicio de sesión (ejemplo: mostrar un mensaje)
+      // Captura de errores inesperados
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
+        SnackBar(content: Text('Error inesperado: $e')),
       );
+    } finally {
+      setState(() {
+        _isLoading = false; // Oculta el estado de carga
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SingleChildScrollView( // Envuelve el contenido en un SingleChildScrollView
+      body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start, // Cambia a start para dejar más espacio
           children: [
             const SizedBox(height: 25),
             const Text(
@@ -69,13 +109,13 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
             SizedBox(
-              height: 450,
-              width: 450,
+              height: 350,
+              width: 350,
               child: Image.asset('assets/images/logo.png'),
             ),
             const SizedBox(height: 25),
 
-            // Campo de texto para el correo electrónico
+            // Campo de texto para correo
             TextField(
               controller: _emailController,
               decoration: const InputDecoration(
@@ -86,7 +126,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 16),
 
-            // Campo de texto para la contraseña
+            // Campo de texto para contraseña
             TextField(
               controller: _passwordController,
               decoration: const InputDecoration(
@@ -97,28 +137,30 @@ class _LoginPageState extends State<LoginPage> {
             ),
             const SizedBox(height: 16),
 
-            // Botón de inicio de sesión
-            GestureDetector(
-              onTap: _login,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 80.0,
-                  vertical: 12.0,
-                ),
-                decoration: BoxDecoration(
-                  color: green,
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: const Text(
-                  'Iniciar Sesión',
-                  style: TextStyle(
-                    color: white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+            // Botón de inicio de sesión con indicador de carga
+            _isLoading
+                ? const CircularProgressIndicator()
+                : GestureDetector(
+                    onTap: _login,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 80.0,
+                        vertical: 12.0,
+                      ),
+                      decoration: BoxDecoration(
+                        color: green,
+                        borderRadius: BorderRadius.circular(10.0),
+                      ),
+                      child: const Text(
+                        'Iniciar Sesión',
+                        style: TextStyle(
+                          color: white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
-            ),
             const SizedBox(height: 8),
 
             // Botón para crear una cuenta
@@ -142,7 +184,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
             ),
 
-            // Botón para olvidar la contraseña
+            // Botón para recuperar la contraseña
             TextButton(
               onPressed: () {
                 Navigator.push(
@@ -161,7 +203,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 25), // Espacio adicional al final
+            const SizedBox(height: 25), // Espacio al final
           ],
         ),
       ),
