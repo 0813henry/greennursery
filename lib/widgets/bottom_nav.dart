@@ -2,9 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:greennursery/core/color.dart';
 import 'package:greennursery/data/bottom_menu.dart';
 import 'package:greennursery/page/home_page.dart';
+import 'package:greennursery/page/cart_page.dart';
+import 'package:greennursery/page/guidelines_page.dart'; // Nueva página
+import 'package:greennursery/page/settings_page.dart'; // Nueva página
+import 'package:greennursery/data/cart_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+final userId = FirebaseAuth.instance.currentUser!.uid;
+final cartController = CartController(userId);
 
 class BottomNavBar extends StatefulWidget {
-  const BottomNavBar({Key? key}) : super(key: key);
+  const BottomNavBar({Key? key}) : super(key: key); // No es necesario el parámetro `cart`
 
   @override
   _BottomNavBarState createState() => _BottomNavBarState();
@@ -13,18 +21,19 @@ class BottomNavBar extends StatefulWidget {
 class _BottomNavBarState extends State<BottomNavBar> {
   PageController pageController = PageController();
   int selectIndex = 0;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PageView.builder(
-        itemCount: child.length,
+      body: PageView(
         controller: pageController,
         onPageChanged: (value) => setState(() => selectIndex = value),
-        itemBuilder: (itemBuilder, index) {
-          return Container(
-            child: child[index],
-          );
-        },
+        children: [
+          HomePage(cartController: cartController), // Pasamos cartController aquí
+          const GuidelinesPage(),
+          CartPage(cartController: cartController),
+          const SettingsPage(),
+        ],
       ),
       bottomNavigationBar: BottomAppBar(
         elevation: 0,
@@ -53,10 +62,3 @@ class _BottomNavBarState extends State<BottomNavBar> {
     );
   }
 }
-
-List<Widget> child = [
-  const HomePage(),
-  Container(color: white),
-  Container(color: white),
-  Container(color: white),
-];
