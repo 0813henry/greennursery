@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:greennursery/core/color.dart';
 import 'package:greennursery/data/plant_model.dart';
+<<<<<<< HEAD
 import 'package:greennursery/data/cart_controller.dart';
+=======
+import 'package:greennursery/data/cart_model.dart';
+>>>>>>> 3c9bff7ee9d25b19aa3f7cab6ccdd00b70783cef
 import 'package:greennursery/page/cart_page.dart';
 
 class DetailsPage extends StatelessWidget {
   final Plants plant;
+<<<<<<< HEAD
   final CartController cart;
+=======
+  final ShoppingCart cart;
+>>>>>>> 3c9bff7ee9d25b19aa3f7cab6ccdd00b70783cef
 
   const DetailsPage({Key? key, required this.plant, required this.cart})
       : super(key: key);
@@ -19,6 +27,7 @@ class DetailsPage extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
+            // Sección de la imagen superior y detalles
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -43,6 +52,7 @@ class DetailsPage extends StatelessWidget {
                     ),
                   ),
                 ),
+                // Descripción del producto
                 Padding(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 20.0, vertical: 20.0),
@@ -60,10 +70,32 @@ class DetailsPage extends StatelessWidget {
                               fontSize: 18.0,
                             ),
                           ),
+<<<<<<< HEAD
                           IconButton(
                             icon: Image.asset('assets/icons/heart.png',
                                 color: white),
                             onPressed: () {},
+=======
+                          Container(
+                            height: 30.0,
+                            width: 30.0,
+                            padding: const EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              color: green,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: green.withOpacity(0.2),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: Image.asset(
+                              'assets/icons/heart.png',
+                              color: white,
+                            ),
+>>>>>>> 3c9bff7ee9d25b19aa3f7cab6ccdd00b70783cef
                           ),
                         ],
                       ),
@@ -91,6 +123,7 @@ class DetailsPage extends StatelessWidget {
                 ),
               ],
             ),
+            // Botón para retroceder y el ícono del carrito en la parte superior
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -105,7 +138,11 @@ class DetailsPage extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
+<<<<<<< HEAD
                         builder: (context) => CartPage(cartController: cart),
+=======
+                        builder: (context) => CartPage(cart: cart),
+>>>>>>> 3c9bff7ee9d25b19aa3f7cab6ccdd00b70783cef
                       ),
                     );
                   },
@@ -114,17 +151,37 @@ class DetailsPage extends StatelessWidget {
                 ),
               ],
             ),
+            // Botón inferior para comprar
             Align(
               alignment: Alignment.bottomRight,
               child: GestureDetector(
                 onTap: () {
+<<<<<<< HEAD
                   _showQuantityDialog(context, plant); // Mostrar el diálogo para seleccionar la cantidad
+=======
+                  cart.addItem(plant);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Producto agregado al carrito'),
+                    ),
+                  );
+>>>>>>> 3c9bff7ee9d25b19aa3f7cab6ccdd00b70783cef
                 },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: 50.0, vertical: 15.0),
                   decoration: BoxDecoration(
                     color: green,
+<<<<<<< HEAD
+=======
+                    boxShadow: [
+                      BoxShadow(
+                        color: green.withOpacity(0.3),
+                        blurRadius: 15,
+                        offset: const Offset(0, -5),
+                      ),
+                    ],
+>>>>>>> 3c9bff7ee9d25b19aa3f7cab6ccdd00b70783cef
                     borderRadius: const BorderRadius.only(
                       topLeft: Radius.circular(60),
                     ),
@@ -135,6 +192,10 @@ class DetailsPage extends StatelessWidget {
                       color: white.withOpacity(0.9),
                       fontSize: 18.0,
                       fontWeight: FontWeight.bold,
+<<<<<<< HEAD
+=======
+                      letterSpacing: 0.5,
+>>>>>>> 3c9bff7ee9d25b19aa3f7cab6ccdd00b70783cef
                     ),
                   ),
                 ),

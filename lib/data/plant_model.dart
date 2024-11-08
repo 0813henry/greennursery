@@ -9,8 +9,12 @@ class Plants {
   final String category;
   final String description;
   final double price;
+<<<<<<< HEAD
   final bool isFavorit;
   final int stock; // Añadido: Campo para el stock o cantidad disponible
+=======
+  bool isFavorit;
+>>>>>>> 3c9bff7ee9d25b19aa3f7cab6ccdd00b70783cef
 
   // Constructor
   Plants({
@@ -20,8 +24,12 @@ class Plants {
     required this.category,
     required this.description,
     required this.price,
+<<<<<<< HEAD
     required this.isFavorit,
     required this.stock, // Añadido
+=======
+    this.isFavorit = false,
+>>>>>>> 3c9bff7ee9d25b19aa3f7cab6ccdd00b70783cef
   });
 
   // Método para crear una instancia de Plants desde un documento de Firestore

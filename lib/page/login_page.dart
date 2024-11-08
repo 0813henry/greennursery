@@ -5,7 +5,10 @@ import 'package:greennursery/core/color.dart';
 import 'package:greennursery/widgets/bottom_nav.dart';
 import 'package:greennursery/page/create_account.dart';
 import 'package:greennursery/page/forgot_password.dart';
+<<<<<<< HEAD
 import 'addProduct_Page.dart';
+=======
+>>>>>>> 3c9bff7ee9d25b19aa3f7cab6ccdd00b70783cef
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -20,9 +23,12 @@ class _LoginPageState extends State<LoginPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   bool _isLoading = false; // Estado de carga
+<<<<<<< HEAD
   final List<String> _adminEmails = [
     'admin@gmail.com', // Cambia esto por los correos que deben tener acceso
   ];
+=======
+>>>>>>> 3c9bff7ee9d25b19aa3f7cab6ccdd00b70783cef
 
   /// Función para manejar el inicio de sesión.
   Future<void> _login() async {
@@ -47,6 +53,7 @@ class _LoginPageState extends State<LoginPage> {
         password: password,
       );
 
+<<<<<<< HEAD
       // Si el inicio de sesión es exitoso, verifica si el usuario tiene acceso
       if (userCredential.user != null) {
         // Verifica si el correo del usuario está en la lista de administradores
@@ -67,6 +74,14 @@ class _LoginPageState extends State<LoginPage> {
             ),
           );
         }
+=======
+      // Si el inicio de sesión es exitoso, redirige a BottomNavBar
+      if (userCredential.user != null) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const BottomNavBar()),
+        );
+>>>>>>> 3c9bff7ee9d25b19aa3f7cab6ccdd00b70783cef
       }
     } on FirebaseAuthException catch (e) {
       // Manejo específico de errores de Firebase
