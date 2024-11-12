@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:greennursery/page/history_Page.dart';
+import 'package:greennursery/widgets/bottom_nav.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'dart:math';
-import 'package:firebase_auth/firebase_auth.dart'; // Asegúrate de importar FirebaseAuth
-import 'forgot_password.dart'; // Asegúrate de importar tu página de recuperación de contraseña
+import 'package:firebase_auth/firebase_auth.dart';
+import 'forgot_password.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -19,27 +21,24 @@ class _SettingsPageState extends State<SettingsPage> {
   String? _imagePath;
   final FirebaseStorage storage = FirebaseStorage.instance;
   Color _backgroundColor = Colors.green.shade100;
-  List<Map<String, dynamic>> _purchases = [];
-  late String userId; // Usar una variable de instancia para el ID del usuario
+  String? userId;
+  String? userName;
 
   @override
   void initState() {
     super.initState();
     _requestPermissions();
-    _getCurrentUserId(); // Obtiene el ID del usuario actual
-    _loadUserSettings();
-    _loadPurchases();
+    _getCurrentUserId();
   }
 
-  // Obtener el ID del usuario actual
   Future<void> _getCurrentUserId() async {
     try {
-      // Verificar si el usuario está autenticado
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         setState(() {
-          userId = user.uid; // Usar el ID del usuario autenticado
+          userId = user.uid;
         });
+        _loadUserSettings();
       } else {
         print("Usuario no autenticado");
       }
@@ -48,39 +47,18 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  // Cargar configuraciones del usuario
   Future<void> _loadUserSettings() async {
-    if (userId.isEmpty) return; // Asegurarse de que el userId no esté vacío
-    // Cargar la imagen de perfil desde Firebase si existe
-    String filePath = 'profile_images/$userId.png'; // Cambiado para usar el ID del usuario
+    if (userId == null) return;
     try {
-      String downloadURL = await storage.ref(filePath).getDownloadURL();
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
       setState(() {
-        _imagePath = downloadURL;
+        userName = userDoc['name'] ?? 'Usuario';
+        _imagePath = userDoc['profileImage'];
+        int colorValue = userDoc['backgroundColor'] ?? Colors.green.shade100.value;
+        _backgroundColor = Color(colorValue);
       });
     } catch (e) {
-      print("Error al cargar la imagen de perfil: $e");
-    }
-  }
-
-  // Cargar historial de compras
-  Future<void> _loadPurchases() async {
-    if (userId.isEmpty) return; // Asegurarse de que el userId no esté vacío
-    try {
-      final QuerySnapshot snapshot = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId)
-          .collection('purchases')
-          .orderBy('purchaseDate', descending: true)
-          .get();
-
-      setState(() {
-        _purchases = snapshot.docs
-            .map((doc) => doc.data() as Map<String, dynamic>)
-            .toList();
-      });
-    } catch (e) {
-      print('Error al cargar el historial de compras: $e');
+      print("Error al cargar la configuración del usuario: $e");
     }
   }
 
@@ -111,8 +89,15 @@ class _SettingsPageState extends State<SettingsPage> {
                     radius: 50,
                     backgroundImage: _imagePath != null
                         ? NetworkImage(_imagePath!)
-                        : const AssetImage('assets/') as ImageProvider,
+                        : const AssetImage('assets/default_profile.png') as ImageProvider,
                   ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Center(
+                child: Text(
+                  userName ?? 'Usuario',
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
               ),
               const SizedBox(height: 20),
@@ -141,27 +126,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   );
                 },
               ),
-              const SizedBox(height: 20),
-              Text(
-                'Historial de Compras',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              _purchases.isNotEmpty
-                  ? ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: _purchases.length,
-                      itemBuilder: (context, index) {
-                        final purchase = _purchases[index];
-                        final DateTime purchaseDate = (purchase['purchaseDate'] as Timestamp).toDate();
-                        return ListTile(
-                          title: Text(purchase['productName'] ?? 'Producto sin nombre'),
-                          subtitle: Text('Cantidad: ${purchase['quantity']} - Fecha: ${purchaseDate.toLocal()}'),
-                          trailing: Text('\$${purchase['totalPrice'] ?? 0}'),
-                        );
-                      },
-                    )
-                  : const Text('No hay compras registradas.'),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: _saveSettings,
@@ -195,7 +159,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // Solicitar permisos para acceder a almacenamiento
   Future<void> _requestPermissions() async {
     final status = await Permission.storage.request();
     if (!status.isGranted) {
@@ -203,7 +166,6 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  // Seleccionar imagen desde la galería
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(
@@ -219,9 +181,8 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  // Subir la imagen seleccionada a Firebase Storage
   Future<void> _uploadImageToFirebase(XFile image) async {
-    String filePath = 'profile_images/$userId.png'; // Usar ID de usuario para la imagen
+    String filePath = 'profile_images/$userId.png';
     File file = File(image.path);
     try {
       await storage.ref(filePath).putFile(file);
@@ -234,40 +195,33 @@ class _SettingsPageState extends State<SettingsPage> {
     }
   }
 
-  // Cambiar el color de fondo aleatoriamente
   void _changeBackgroundColor() {
-    final Random random = Random();
     setState(() {
-      _backgroundColor = Color.fromARGB(
-        255,
-        random.nextInt(256),
-        random.nextInt(256),
-        random.nextInt(256),
-      );
+      _backgroundColor = Color((Random().nextDouble() * 0xFFFFFF).toInt()).withOpacity(1.0);
     });
   }
 
-  // Eliminar la cuenta del usuario
-  Future<void> _deleteAccount() async {
+  Future<void> _saveSettings() async {
+    if (userId == null) return;
     try {
-      await FirebaseFirestore.instance.collection('users').doc(userId).delete();
-      print('Cuenta eliminada');
-      Navigator.pushNamed(context, '/login');
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'backgroundColor': _backgroundColor.value,
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Configuraciones guardadas')),
+      );
     } catch (e) {
-      print('Error al eliminar la cuenta: $e');
+      print('Error al guardar configuraciones: $e');
     }
   }
 
-  // Guardar configuraciones del usuario
-  Future<void> _saveSettings() async {
+  Future<void> _deleteAccount() async {
     try {
-      await FirebaseFirestore.instance.collection('users').doc(userId).set({
-        'backgroundColor': _backgroundColor.value,
-        'profileImage': _imagePath,
-      }, SetOptions(merge: true));
-      print('Configuraciones guardadas');
+      User? user = FirebaseAuth.instance.currentUser;
+      await user?.delete();
+      Navigator.pushReplacementNamed(context, '/login');
     } catch (e) {
-      print('Error al guardar configuraciones: $e');
+      print('Error al eliminar la cuenta: $e');
     }
   }
 }
