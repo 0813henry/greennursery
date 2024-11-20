@@ -1,6 +1,7 @@
 // lib/page/history_page.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 import 'package:greennursery/data/cart_controller.dart';
 
 class HistoryPage extends StatefulWidget {
@@ -13,7 +14,8 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  String selectedFilter = 'Todas las fechas';
+  DateTime? selectedStartDate;
+  DateTime? selectedEndDate;
 
   @override
   Widget build(BuildContext context) {
@@ -32,22 +34,36 @@ class _HistoryPageState extends State<HistoryPage> {
               children: [
                 const Text('Filtrar por fecha:', style: TextStyle(fontSize: 16)),
                 const SizedBox(width: 10),
-                DropdownButton<String>(
-                  value: selectedFilter,
-                  items: [
-                    'Todas las fechas',
-                    'Última semana',
-                    'Último mes',
-                    'Último año',
-                  ].map((String filter) {
-                    return DropdownMenuItem<String>(
-                      value: filter,
-                      child: Text(filter),
+                ElevatedButton(
+                  onPressed: () async {
+                    DateTimeRange? pickedRange = await showDateRangePicker(
+                      context: context,
+                      firstDate: DateTime(2000),
+                      lastDate: DateTime.now(),
+                      initialDateRange: selectedStartDate != null && selectedEndDate != null
+                          ? DateTimeRange(start: selectedStartDate!, end: selectedEndDate!)
+                          : null,
                     );
-                  }).toList(),
-                  onChanged: (String? newValue) {
+                    if (pickedRange != null) {
+                      setState(() {
+                        selectedStartDate = pickedRange.start;
+                        selectedEndDate = pickedRange.end;
+                      });
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+                  child: Text(
+                    selectedStartDate != null && selectedEndDate != null
+                        ? '${DateFormat('dd/MM/yyyy').format(selectedStartDate!)} - ${DateFormat('dd/MM/yyyy').format(selectedEndDate!)}'
+                        : 'Seleccionar rango',
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.red),
+                  onPressed: () {
                     setState(() {
-                      selectedFilter = newValue!;
+                      selectedStartDate = null;
+                      selectedEndDate = null;
                     });
                   },
                 ),
@@ -86,10 +102,9 @@ class _HistoryPageState extends State<HistoryPage> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       elevation: 4,
-                      child: ListTile(
-                        contentPadding: const EdgeInsets.all(16),
+                      child: ExpansionTile(
                         title: Text(
-                          'Compra realizada el: ${date.toLocal()}',
+                          'Compra realizada el: ${DateFormat('dd/MM/yyyy').format(date)}',
                           style: const TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -99,10 +114,30 @@ class _HistoryPageState extends State<HistoryPage> {
                           'Total: \$${totalAmount.toStringAsFixed(2)}',
                           style: const TextStyle(fontSize: 14, color: Colors.grey),
                         ),
-                        trailing: IconButton(
-                          icon: const Icon(Icons.expand_more, color: Colors.green),
-                          onPressed: () => _showPurchaseDetails(context, items),
-                        ),
+                        children: items.map<Widget>((item) {
+                          final name = item['name'];
+                          final price = item['price'];
+                          final quantity = item['quantity'];
+                          final itemTotal = price * quantity;
+
+                          return Container(
+                            margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[200],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: ListTile(
+                              title: Text(
+                                name,
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              subtitle: Text(
+                                'Precio: \$${price.toStringAsFixed(2)} x $quantity = \$${itemTotal.toStringAsFixed(2)}',
+                              ),
+                            ),
+                          );
+                        }).toList(),
                       ),
                     );
                   },
@@ -116,90 +151,18 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Stream<QuerySnapshot> _getFilteredStream() {
-    DateTime? startDate;
+    var query = FirebaseFirestore.instance
+        .collection('users')
+        .doc(widget.cartController.userId) // Verifica que userId sea el del usuario actual
+        .collection('purchases')
+        .orderBy('date', descending: true);
 
-    switch (selectedFilter) {
-      case 'Última semana':
-        startDate = DateTime.now().subtract(const Duration(days: 7));
-        break;
-      case 'Último mes':
-        startDate = DateTime.now().subtract(const Duration(days: 30));
-        break;
-      case 'Último año':
-        startDate = DateTime.now().subtract(const Duration(days: 365));
-        break;
-      default:
-        return FirebaseFirestore.instance
-            .collection('users')
-            .doc(widget.cartController.userId)
-            .collection('purchases')
-            .orderBy('date', descending: true)
-            .snapshots();
+    if (selectedStartDate != null && selectedEndDate != null) {
+      query = query
+          .where('date', isGreaterThanOrEqualTo: selectedStartDate)
+          .where('date', isLessThanOrEqualTo: selectedEndDate);
     }
 
-    return FirebaseFirestore.instance
-        .collection('users')
-        .doc(widget.cartController.userId)
-        .collection('purchases')
-        .where('date', isGreaterThanOrEqualTo: startDate)
-        .orderBy('date', descending: true)
-        .snapshots();
-  }
-
-  void _showPurchaseDetails(BuildContext context, List items) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          title: const Text(
-            'Detalles de la Compra',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: items.map<Widget>((item) {
-                final name = item['name'];
-                final price = item['price'];
-                final quantity = item['quantity'];
-                final itemTotal = price * quantity;
-
-                return Container(
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: ListTile(
-                    title: Text(
-                      name,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Text(
-                      'Precio: \$${price.toStringAsFixed(2)} x $quantity = \$${itemTotal.toStringAsFixed(2)}',
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                'Cerrar',
-                style: TextStyle(color: Colors.green, fontSize: 16),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+    return query.snapshots();
   }
 }
