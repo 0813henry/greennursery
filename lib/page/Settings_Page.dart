@@ -20,6 +20,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Color _backgroundColor = Colors.green.shade100;
   String? userId;
   String? userName;
+  final TextEditingController _nameController = TextEditingController();
 
   @override
   void initState() {
@@ -50,6 +51,7 @@ class _SettingsPageState extends State<SettingsPage> {
       if (userDoc.exists) {
         setState(() {
           userName = userDoc['name'] ?? 'Usuario';
+          _nameController.text = userName!;
           _imagePath = userDoc['profileImage'];
           int colorValue = userDoc['backgroundColor'] ?? Colors.green.shade100.value;
           _backgroundColor = Color(colorValue);
@@ -69,16 +71,16 @@ class _SettingsPageState extends State<SettingsPage> {
         title: const Text('Configuración'),
         backgroundColor: Colors.green,
       ),
-      body: SingleChildScrollView(
-        child: Container(
-          padding: const EdgeInsets.all(16.0),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [_backgroundColor, Colors.green.shade300],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.green.shade300, Colors.green.shade700],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
           ),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -100,15 +102,33 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 10),
               Center(
-                child: Text(
-                  userName ?? 'Usuario',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                child: TextButton(
+                  onPressed: _pickImage,
+                  child: const Text(
+                    'Cambiar Imagen de Perfil',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Center(
+                child: TextField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Nombre de Usuario',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    prefixIcon: const Icon(Icons.person),
+                    filled: true,
+                    fillColor: Colors.white,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
               Text(
                 'Cambiar Color de Fondo',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               TextButton(
                 onPressed: _changeBackgroundColor,
@@ -122,8 +142,8 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               const SizedBox(height: 20),
               ListTile(
-                title: const Text('Cambiar Contraseña'),
-                trailing: const Icon(Icons.arrow_forward),
+                title: const Text('Cambiar Contraseña', style: TextStyle(color: Colors.white)),
+                trailing: const Icon(Icons.arrow_forward, color: Colors.white),
                 onTap: () {
                   Navigator.push(
                     context,
@@ -136,7 +156,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 onPressed: _saveSettings,
                 child: const Text('Guardar Configuraciones'),
                 style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                   backgroundColor: Colors.green.shade700,
+                  shadowColor: Colors.green.shade900,
+                  elevation: 10,
                 ),
               ),
               const SizedBox(height: 20),
@@ -144,7 +170,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 onPressed: _deleteAccount,
                 child: const Text('Eliminar Cuenta'),
                 style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                   backgroundColor: Colors.redAccent,
+                  shadowColor: Colors.red,
+                  elevation: 10,
                 ),
               ),
               const SizedBox(height: 20),
@@ -154,7 +186,13 @@ class _SettingsPageState extends State<SettingsPage> {
                 },
                 child: const Text('Cerrar Sesión'),
                 style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                  ),
                   backgroundColor: Colors.redAccent,
+                  shadowColor: Colors.red,
+                  elevation: 10,
                 ),
               ),
             ],
@@ -205,6 +243,7 @@ class _SettingsPageState extends State<SettingsPage> {
       await FirebaseFirestore.instance.collection('users').doc(userId).update({
         'backgroundColor': _backgroundColor.value,
         'profileImage': _imagePath,
+        'name': _nameController.text.trim(),
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Configuraciones guardadas')),
