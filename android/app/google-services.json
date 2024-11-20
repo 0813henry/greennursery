@@ -7,6 +7,35 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:362082290742:android:b405e040ff4286ab7d9c97",
+        "android_client_info": {
+          "package_name": "com.app.greenursey"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "362082290742-qlgg0tp3rmt98i9hu0g2t91of8tscj9s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDWfxBueMwGb4BhV3gkhvPmrVC0JsZwwic"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "362082290742-qlgg0tp3rmt98i9hu0g2t91of8tscj9s.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:362082290742:android:cb9bcec9bddfd8637d9c97",
         "android_client_info": {
           "package_name": "com.greennursery.app"

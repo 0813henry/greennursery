@@ -30,11 +30,15 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       // Obtener el ID único del usuario
       String userId = userCredential.user!.uid;
 
+      // URL de la imagen de perfil por defecto
+      String defaultProfileImageUrl = 'https://firebasestorage.googleapis.com/v0/b/greennursery-7eccd.appspot.com/o/profile_images%2Fuser_id.png?alt=media&token=509583ef-a145-4e27-9571-9c9f3e616917';
+
       // Guardar datos del usuario en Firestore
       await _firestore.collection('users').doc(userId).set({
         'name': _nameController.text.trim(),
         'email': _emailController.text.trim(),
         'createdAt': Timestamp.now(),
+        'profileImage': defaultProfileImageUrl,
       });
 
       // Navegar o redirigir después de crear la cuenta

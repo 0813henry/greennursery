@@ -92,7 +92,7 @@ class CartController {
         .collection('cart')
         .get();
 
-    return cartItems.docs.map((doc) => doc.data() as Map<String, dynamic>).toList();
+    return cartItems.docs.map((doc) => doc.data()).toList();
   }
 
   // Función para realizar el pago
@@ -156,5 +156,52 @@ class CartController {
       'items': cartItems,
       'totalAmount': await getTotalAmount(),
     });
+  }
+
+  // Función para obtener los favoritos del usuario
+  Stream<QuerySnapshot> getFavorites() {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('favorites')
+        .snapshots();
+  }
+
+  // Función para añadir un producto a los favoritos
+  Future<void> addToFavorites(Plants plant) async {
+    final favoriteRef = _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('favorites')
+        .doc(plant.id);
+
+    await favoriteRef.set({
+      'plantId': plant.id,
+      'name': plant.name,
+      'imagePath': plant.imagePath,
+      'category': plant.category,
+    });
+  }
+
+  // Función para eliminar un producto de los favoritos
+  Future<void> removeFromFavorites(String plantId) async {
+    await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('favorites')
+        .doc(plantId)
+        .delete();
+  }
+
+  // Función para verificar si un producto está en los favoritos
+  Future<bool> isFavorite(String plantId) async {
+    final favoriteDoc = await _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('favorites')
+        .doc(plantId)
+        .get();
+
+    return favoriteDoc.exists;
   }
 }

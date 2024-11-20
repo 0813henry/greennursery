@@ -7,10 +7,13 @@ import 'package:greennursery/page/create_account.dart';
 import 'package:greennursery/page/forgot_password.dart';
 import 'package:greennursery/data/cart_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   // Inicializa los controladores
   final user = FirebaseAuth.instance.currentUser;

@@ -17,29 +17,17 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -54,9 +42,48 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyDWfxBueMwGb4BhV3gkhvPmrVC0JsZwwic',
-    appId: '1:362082290742:android:cb9bcec9bddfd8637d9c97',
+    appId: '1:362082290742:android:b405e040ff4286ab7d9c97',
     messagingSenderId: '362082290742',
     projectId: 'greennursery-7eccd',
     storageBucket: 'greennursery-7eccd.appspot.com',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDkFmMl0ezx1M1fBsG3dR-4-7RPdqmQ7ew',
+    appId: '1:362082290742:web:c4a0fa82fb50b73e7d9c97',
+    messagingSenderId: '362082290742',
+    projectId: 'greennursery-7eccd',
+    authDomain: 'greennursery-7eccd.firebaseapp.com',
+    storageBucket: 'greennursery-7eccd.appspot.com',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyBan2a9PBiZ-HbR8DqLjy5bTsGLlcMWBsw',
+    appId: '1:362082290742:ios:e6135301de2728aa7d9c97',
+    messagingSenderId: '362082290742',
+    projectId: 'greennursery-7eccd',
+    storageBucket: 'greennursery-7eccd.appspot.com',
+    iosClientId: '362082290742-huc1cm698417bd54gla5asu2n8aveiia.apps.googleusercontent.com',
+    iosBundleId: 'com.example.greennursery',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyBan2a9PBiZ-HbR8DqLjy5bTsGLlcMWBsw',
+    appId: '1:362082290742:ios:e6135301de2728aa7d9c97',
+    messagingSenderId: '362082290742',
+    projectId: 'greennursery-7eccd',
+    storageBucket: 'greennursery-7eccd.appspot.com',
+    iosClientId: '362082290742-huc1cm698417bd54gla5asu2n8aveiia.apps.googleusercontent.com',
+    iosBundleId: 'com.example.greennursery',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyDkFmMl0ezx1M1fBsG3dR-4-7RPdqmQ7ew',
+    appId: '1:362082290742:web:49886dc5a3601e747d9c97',
+    messagingSenderId: '362082290742',
+    projectId: 'greennursery-7eccd',
+    authDomain: 'greennursery-7eccd.firebaseapp.com',
+    storageBucket: 'greennursery-7eccd.appspot.com',
+  );
+
 }

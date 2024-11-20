@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:greennursery/page/history_Page.dart';
-import 'package:greennursery/widgets/bottom_nav.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'dart:math';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -27,7 +24,6 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     super.initState();
-    _requestPermissions();
     _getCurrentUserId();
   }
 
@@ -51,12 +47,16 @@ class _SettingsPageState extends State<SettingsPage> {
     if (userId == null) return;
     try {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-      setState(() {
-        userName = userDoc['name'] ?? 'Usuario';
-        _imagePath = userDoc['profileImage'];
-        int colorValue = userDoc['backgroundColor'] ?? Colors.green.shade100.value;
-        _backgroundColor = Color(colorValue);
-      });
+      if (userDoc.exists) {
+        setState(() {
+          userName = userDoc['name'] ?? 'Usuario';
+          _imagePath = userDoc['profileImage'];
+          int colorValue = userDoc['backgroundColor'] ?? Colors.green.shade100.value;
+          _backgroundColor = Color(colorValue);
+        });
+      } else {
+        print("El documento del usuario no existe.");
+      }
     } catch (e) {
       print("Error al cargar la configuración del usuario: $e");
     }
@@ -90,6 +90,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     backgroundImage: _imagePath != null
                         ? NetworkImage(_imagePath!)
                         : const AssetImage('assets/default_profile.png') as ImageProvider,
+                    onBackgroundImageError: (_, __) {
+                      setState(() {
+                        _imagePath = null;
+                      });
+                    },
                   ),
                 ),
               ),
@@ -159,13 +164,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Future<void> _requestPermissions() async {
-    final status = await Permission.storage.request();
-    if (!status.isGranted) {
-      print("Permiso denegado");
-    }
-  }
-
   Future<void> _pickImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(
@@ -206,6 +204,7 @@ class _SettingsPageState extends State<SettingsPage> {
     try {
       await FirebaseFirestore.instance.collection('users').doc(userId).update({
         'backgroundColor': _backgroundColor.value,
+        'profileImage': _imagePath,
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Configuraciones guardadas')),

@@ -3,16 +3,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Plants {
-  final String id; // ID del documento en Firestore
+  final String id;
   final String name;
   final String imagePath;
   final String category;
   final String description;
   final double price;
   final bool isFavorit;
-  final int stock; // Añadido: Campo para el stock o cantidad disponible
+  final int stock;
 
-  // Constructor
   Plants({
     required this.id,
     required this.name,
@@ -21,7 +20,7 @@ class Plants {
     required this.description,
     required this.price,
     required this.isFavorit,
-    required this.stock, // Añadido
+    required this.stock,
   });
 
   // Método para crear una instancia de Plants desde un documento de Firestore
@@ -37,7 +36,6 @@ class Plants {
       stock: (doc['stock'] ?? 0).toInt(), // Asegúrate de convertir a int
     );
   }
-
   // Método para convertir la instancia de Plants a un Map, útil para guardar en Firestore
   Map<String, dynamic> toMap() {
     return {
@@ -50,7 +48,6 @@ class Plants {
       'stock': stock, // Añadido
     };
   }
-
   // Método para copiar el objeto con nuevos valores
   Plants copyWith({
     String? id,
