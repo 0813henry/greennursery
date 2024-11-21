@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:greennursery/data/plant_model.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import '../page/login_page.dart';
 
 class AddProductPage extends StatefulWidget {
-  const AddProductPage({Key? key}) : super(key: key);
-
   @override
   _AddProductPageState createState() => _AddProductPageState();
 }
@@ -15,160 +15,279 @@ class _AddProductPageState extends State<AddProductPage> {
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _stockController = TextEditingController();
-
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   String? _selectedCategory;
-  bool _isLoading = false;
-  String? _editProductId;
 
-  Future<void> _addOrUpdateProduct() async {
-    if (_auth.currentUser?.email != 'admin@gmail.com') {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No tienes permiso para modificar productos.')),
-      );
-      return;
-    }
+  final List<String> _categories = [
+    'Exterior',
+    'Interior',
+    'Cactus',
+    'Oficina',
+    'Bonsai',
+    'Bromelias',
+    'Buena Suerte',
+    'Carnivoras',
+    'Florales',
+    'Hojas',
+    'Huerta',
+    'Jardin & Balcon',
+    'Orquideas',
+    'Purificadoas de Aire',
+    'Rastreras & Enredaderas'
+  ];
 
-    String name = _nameController.text.trim();
-    String imagePath = _imagePathController.text.trim();
-    String description = _descriptionController.text.trim();
-    double? price = double.tryParse(_priceController.text.trim());
-    int? stock = int.tryParse(_stockController.text.trim());
+  Future<void> _addPlant() async {
+    final plant = Plants(
+      id: '',
+      name: _nameController.text,
+      imagePath: _imagePathController.text,
+      category: _selectedCategory ?? '',
+      description: _descriptionController.text,
+      price: double.parse(_priceController.text),
+      isFavorit: false,
+      stock: int.parse(_stockController.text),
+    );
 
-    if (name.isEmpty || imagePath.isEmpty || description.isEmpty || price == null || stock == null || _selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Por favor, completa todos los campos.')),
-      );
-      return;
-    }
+    await FirebaseFirestore.instance.collection('plants').add(plant.toMap());
+    _clearFields();
+  }
 
+  void _clearFields() {
+    _nameController.clear();
+    _imagePathController.clear();
+    _descriptionController.clear();
+    _priceController.clear();
+    _stockController.clear();
     setState(() {
-      _isLoading = true;
+      _selectedCategory = null;
     });
+  }
 
-    try {
-      if (_editProductId == null) {
-        // Agregar nuevo producto
-        await _firestore.collection('products').add({
-          'name': name,
-          'imagePath': imagePath,
-          'description': description,
-          'price': price,
-          'stock': stock,
-          'category': _selectedCategory,
-          'createdAt': Timestamp.now(),
-        });
-      } else {
-        // Actualizar producto existente
-        await _firestore.collection('products').doc(_editProductId).update({
-          'name': name,
-          'imagePath': imagePath,
-          'description': description,
-          'price': price,
-          'stock': stock,
-          'category': _selectedCategory,
-          'updatedAt': Timestamp.now(),
-        });
-      }
+  Future<void> _deletePlant(String id) async {
+    await FirebaseFirestore.instance.collection('plants').doc(id).delete();
+  }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Producto guardado exitosamente.')),
-      );
-      Navigator.pop(context);
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al guardar el producto: $e')),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
+  Future<void> _updatePlant(Plants plant) async {
+    await FirebaseFirestore.instance.collection('plants').doc(plant.id).update(plant.toMap());
+  }
+
+  Future<void> _logout() async {
+    await FirebaseAuth.instance.signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Agregar/Editar Producto'),
-        backgroundColor: Colors.green,
+        title: Text('Administrar Plantas'),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: _logout,
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
-                labelText: 'Nombre del Producto',
+              decoration: InputDecoration(
+                labelText: 'Nombre',
                 border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.local_florist),
               ),
             ),
-            const SizedBox(height: 16),
+            SizedBox(height: 10),
             TextField(
               controller: _imagePathController,
-              decoration: const InputDecoration(
-                labelText: 'URL de la Imagen',
+              decoration: InputDecoration(
+                labelText: 'Ruta de Imagen',
                 border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.image),
               ),
             ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Descripción',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _priceController,
-              decoration: const InputDecoration(
-                labelText: 'Precio',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _stockController,
-              decoration: const InputDecoration(
-                labelText: 'Stock',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
+            SizedBox(height: 10),
             DropdownButtonFormField<String>(
               value: _selectedCategory,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 labelText: 'Categoría',
                 border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.category),
               ),
-              items: <String>['Plantas', 'Macetas', 'Accesorios']
-                  .map((String category) {
-                return DropdownMenuItem<String>(
+              items: _categories.map((category) {
+                return DropdownMenuItem(
                   value: category,
                   child: Text(category),
                 );
               }).toList(),
-              onChanged: (String? newValue) {
+              onChanged: (value) {
                 setState(() {
-                  _selectedCategory = newValue;
+                  _selectedCategory = value;
                 });
               },
             ),
-            const SizedBox(height: 16),
-            _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : ElevatedButton(
-                    onPressed: _addOrUpdateProduct,
-                    child: const Text('Guardar Producto'),
-                  ),
+            SizedBox(height: 10),
+            TextField(
+              controller: _descriptionController,
+              decoration: InputDecoration(
+                labelText: 'Descripción',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.description),
+              ),
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: _priceController,
+              decoration: InputDecoration(
+                labelText: 'Precio',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.attach_money),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 10),
+            TextField(
+              controller: _stockController,
+              decoration: InputDecoration(
+                labelText: 'Stock',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.storage),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _addPlant,
+              child: Text('Agregar Planta'),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                textStyle: TextStyle(fontSize: 16),
+              ),
+            ),
+            SizedBox(height: 20),
+            StreamBuilder<QuerySnapshot>(
+              stream: FirebaseFirestore.instance.collection('plants').snapshots(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return CircularProgressIndicator();
+                }
+
+                final plants = snapshot.data!.docs.map((doc) => Plants.fromDocument(doc)).toList();
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: plants.length,
+                  itemBuilder: (context, index) {
+                    final plant = plants[index];
+                    return Card(
+                      margin: EdgeInsets.symmetric(vertical: 10),
+                      child: ListTile(
+                        title: Text(plant.name),
+                        subtitle: Text('Stock: ${plant.stock}'),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(Icons.edit),
+                              onPressed: () {
+                                _nameController.text = plant.name;
+                                _imagePathController.text = plant.imagePath;
+                                _selectedCategory = plant.category;
+                                _descriptionController.text = plant.description;
+                                _priceController.text = plant.price.toString();
+                                _stockController.text = plant.stock.toString();
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: Text('Modificar Planta'),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          TextField(
+                                            controller: _nameController,
+                                            decoration: InputDecoration(labelText: 'Nombre'),
+                                          ),
+                                          TextField(
+                                            controller: _imagePathController,
+                                            decoration: InputDecoration(labelText: 'Ruta de Imagen'),
+                                          ),
+                                          DropdownButtonFormField<String>(
+                                            value: _selectedCategory,
+                                            decoration: InputDecoration(labelText: 'Categoría'),
+                                            items: _categories.map((category) {
+                                              return DropdownMenuItem(
+                                                value: category,
+                                                child: Text(category),
+                                              );
+                                            }).toList(),
+                                            onChanged: (value) {
+                                              setState(() {
+                                                _selectedCategory = value;
+                                              });
+                                            },
+                                          ),
+                                          TextField(
+                                            controller: _descriptionController,
+                                            decoration: InputDecoration(labelText: 'Descripción'),
+                                          ),
+                                          TextField(
+                                            controller: _priceController,
+                                            decoration: InputDecoration(labelText: 'Precio'),
+                                            keyboardType: TextInputType.number,
+                                          ),
+                                          TextField(
+                                            controller: _stockController,
+                                            decoration: InputDecoration(labelText: 'Stock'),
+                                            keyboardType: TextInputType.number,
+                                          ),
+                                        ],
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text('Cancelar'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            final updatedPlant = plant.copyWith(
+                                              name: _nameController.text,
+                                              imagePath: _imagePathController.text,
+                                              category: _selectedCategory ?? '',
+                                              description: _descriptionController.text,
+                                              price: double.parse(_priceController.text),
+                                              stock: int.parse(_stockController.text),
+                                            );
+                                            _updatePlant(updatedPlant);
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text('Guardar'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.delete),
+                              onPressed: () => _deletePlant(plant.id),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),
