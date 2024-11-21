@@ -1,13 +1,23 @@
-// lib/page/cart_page.dart
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:greennursery/data/cart_controller.dart';
 import 'package:greennursery/page/history_page.dart';
+import 'dart:math';
 
-class CartPage extends StatelessWidget {
+class CartPage extends StatefulWidget {
   final CartController cartController;
+  final Function incrementNotificationCount;
 
-  const CartPage({Key? key, required this.cartController}) : super(key: key);
+  const CartPage({Key? key, required this.cartController, required this.incrementNotificationCount}) : super(key: key);
+
+  @override
+  _CartPageState createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+  final TextEditingController _addressController = TextEditingController();
+  String _selectedPaymentMethod = 'Tarjeta';
+  final List<String> _paymentMethods = ['Tarjeta', 'Transferencia', 'Efectivo contra entrega'];
 
   @override
   Widget build(BuildContext context) {
@@ -22,8 +32,7 @@ class CartPage extends StatelessWidget {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>
-                        HistoryPage(cartController: cartController),
+                    builder: (context) => HistoryPage(cartController: widget.cartController),
                   ),
                 );
               },
@@ -39,7 +48,7 @@ class CartPage extends StatelessWidget {
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        stream: cartController.getCartItems(),
+        stream: widget.cartController.getCartItems(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -51,25 +60,54 @@ class CartPage extends StatelessWidget {
           final cartItems = snapshot.data!.docs;
 
           return FutureBuilder<double>(
-            future: cartController.getTotalAmount(),
+            future: widget.cartController.getTotalAmount(),
             builder: (context, totalSnapshot) {
               if (totalSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
 
               double totalAmount = totalSnapshot.data ?? 0;
+              double tax = totalAmount * 0.15; // 15% tax
+              double shippingCost = 10.0; // Fixed shipping cost
+              double finalAmount = totalAmount + tax + shippingCost;
 
               return Column(
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      'Total a Pagar: \$${totalAmount.toStringAsFixed(2)}',
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.green,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Total: \$${totalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Impuestos (15%): \$${tax.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Costo de Envío: \$${shippingCost.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          'Total a Pagar: \$${finalAmount.toStringAsFixed(2)}',
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   Expanded(
@@ -84,8 +122,7 @@ class CartPage extends StatelessWidget {
                         final itemTotal = price * quantity;
 
                         return Card(
-                          margin: const EdgeInsets.symmetric(
-                              vertical: 8, horizontal: 16),
+                          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -94,8 +131,7 @@ class CartPage extends StatelessWidget {
                             contentPadding: const EdgeInsets.all(12),
                             title: Text(
                               name,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 18),
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
                             ),
                             subtitle: Text(
                               'Precio: \$${price.toStringAsFixed(2)} x $quantity = \$${itemTotal.toStringAsFixed(2)}',
@@ -105,15 +141,12 @@ class CartPage extends StatelessWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.remove,
-                                      color: Colors.red),
+                                  icon: const Icon(Icons.remove, color: Colors.red),
                                   onPressed: () async {
                                     if (quantity > 1) {
-                                      await cartController.updateQuantity(
-                                          productId, quantity - 1);
+                                      await widget.cartController.updateQuantity(productId, quantity - 1);
                                     } else {
-                                      await _removeFromCart(
-                                          context, productId, quantity);
+                                      await _removeFromCart(context, productId, quantity);
                                     }
                                   },
                                 ),
@@ -122,19 +155,15 @@ class CartPage extends StatelessWidget {
                                   style: const TextStyle(fontSize: 18),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.add,
-                                      color: Colors.green),
+                                  icon: const Icon(Icons.add, color: Colors.green),
                                   onPressed: () async {
-                                    await _updateQuantity(
-                                        context, productId, quantity + 1);
+                                    await _updateQuantity(context, productId, quantity + 1);
                                   },
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete,
-                                      color: Colors.grey),
+                                  icon: const Icon(Icons.delete, color: Colors.grey),
                                   onPressed: () async {
-                                    await _removeFromCart(
-                                        context, productId, quantity);
+                                    await _removeFromCart(context, productId, quantity);
                                   },
                                 ),
                               ],
@@ -146,70 +175,94 @@ class CartPage extends StatelessWidget {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
                       children: [
-                        ElevatedButton(
-                          onPressed: () async {
-                            try {
-                              await cartController.clearCart();
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content:
-                                          Text('Carrito vaciado con éxito.')),
-                                );
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content:
-                                          Text('Error al vaciar el carrito: $e')),
-                                );
-                              }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                        TextField(
+                          controller: _addressController,
+                          decoration: const InputDecoration(
+                            labelText: 'Dirección de Entrega',
+                            border: OutlineInputBorder(),
                           ),
-                          child: const Text('Vaciar Carrito'),
                         ),
-                        ElevatedButton(
-                          onPressed: () async {
-                            try {
-                              await cartController.makePayment();
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content:
-                                          Text('Pago realizado con éxito.')),
-                                );
-                              }
-                            } catch (e) {
-                              if (context.mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content:
-                                          Text('Error al realizar el pago: $e')),
-                                );
-                              }
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.green,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 24, vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
+                        SizedBox(height: 10),
+                        DropdownButtonFormField<String>(
+                          value: _selectedPaymentMethod,
+                          decoration: const InputDecoration(
+                            labelText: 'Método de Pago',
+                            border: OutlineInputBorder(),
                           ),
-                          child: const Text('Realizar Pago'),
+                          items: _paymentMethods.map((method) {
+                            return DropdownMenuItem(
+                              value: method,
+                              child: Text(method),
+                            );
+                          }).toList(),
+                          onChanged: (value) {
+                            setState(() {
+                              _selectedPaymentMethod = value!;
+                            });
+                          },
+                        ),
+                        SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () async {
+                                try {
+                                  await widget.cartController.clearCart();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Carrito vaciado con éxito.')),
+                                    );
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error al vaciar el carrito: $e')),
+                                    );
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text('Vaciar Carrito'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () async {
+                                try {
+                                  String orderId = _generateOrderId();
+                                  await widget.cartController.makePayment();
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Pago realizado con éxito. Número de referencia: $orderId')),
+                                    );
+                                    widget.incrementNotificationCount();
+                                    _simulateOrderStatus(orderId, cartItems.map((item) => item['name'] as String).toList());
+                                  }
+                                } catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Error al realizar el pago: $e')),
+                                    );
+                                  }
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.green,
+                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                              ),
+                              child: const Text('Realizar Pago'),
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -223,10 +276,9 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Future<void> _removeFromCart(
-      BuildContext context, String productId, int quantity) async {
+  Future<void> _removeFromCart(BuildContext context, String productId, int quantity) async {
     try {
-      await cartController.removeFromCart(productId);
+      await widget.cartController.removeFromCart(productId);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Producto eliminado del carrito.')),
@@ -241,10 +293,9 @@ class CartPage extends StatelessWidget {
     }
   }
 
-  Future<void> _updateQuantity(
-      BuildContext context, String productId, int quantity) async {
+  Future<void> _updateQuantity(BuildContext context, String productId, int quantity) async {
     try {
-      await cartController.updateQuantity(productId, quantity);
+      await widget.cartController.updateQuantity(productId, quantity);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Cantidad actualizada.')),
@@ -257,5 +308,46 @@ class CartPage extends StatelessWidget {
         );
       }
     }
+  }
+
+  String _generateOrderId() {
+    final random = Random();
+    final orderId = List<int>.generate(10, (_) => random.nextInt(10)).join();
+    return orderId;
+  }
+
+  void _simulateOrderStatus(String orderId, List<String> plantNames) async {
+    final firestore = FirebaseFirestore.instance;
+
+    for (String name in plantNames) {
+      await firestore.collection('notifications').add({
+        'orderId': orderId,
+        'plantName': name,
+        'status': 'Pedido en preparación',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
+
+    Future.delayed(Duration(seconds: 10), () async {
+      for (String name in plantNames) {
+        await firestore.collection('notifications').add({
+          'orderId': orderId,
+          'plantName': name,
+          'status': 'Pedido enviado',
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }
+    });
+
+    Future.delayed(Duration(seconds: 20), () async {
+      for (String name in plantNames) {
+        await firestore.collection('notifications').add({
+          'orderId': orderId,
+          'plantName': name,
+          'status': 'Pedido entregado',
+          'timestamp': FieldValue.serverTimestamp(),
+        });
+      }
+    });
   }
 }

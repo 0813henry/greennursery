@@ -31,7 +31,7 @@ class BottomNavBarState extends State<BottomNavBar> {
         children: [
           HomePage(cartController: cartController), // Pasamos cartController aquí
           FavoritePage(cartController: cartController),
-          CartPage(cartController: cartController),
+          CartPage(cartController: cartController, incrementNotificationCount: () {}),
           const SettingsPage(),
         ],
       ),

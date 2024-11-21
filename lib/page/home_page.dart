@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:greennursery/data/cart_controller.dart';
 import 'package:greennursery/data/plant_model.dart';
 import 'package:greennursery/page/details_page.dart';
+import 'package:greennursery/page/notifications_page.dart';
 import 'package:greennursery/core/color.dart';
 
 class HomePage extends StatefulWidget {
@@ -38,12 +39,19 @@ class _HomePageState extends State<HomePage> {
     'Rastreras & Enredaderas'
   ];
   Future<List<Plants>>? plantsFuture;
+  int notificationCount = 0;
 
   @override
   void initState() {
     super.initState();
     // Inicializar la carga de plantas una vez
     plantsFuture = _fetchPlants();
+  }
+
+  void _incrementNotificationCount() {
+    setState(() {
+      notificationCount++;
+    });
   }
 
   @override
@@ -57,6 +65,45 @@ class _HomePageState extends State<HomePage> {
           'GreenNursery',
           style: TextStyle(color: black, fontWeight: FontWeight.bold, fontSize: 24),
         ),
+        actions: [
+          Stack(
+            children: [
+              IconButton(
+                icon: Icon(Icons.notifications, color: black),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => NotificationsPage()),
+                  );
+                },
+              ),
+              if (notificationCount > 0)
+                Positioned(
+                  right: 11,
+                  top: 11,
+                  child: Container(
+                    padding: EdgeInsets.all(2),
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    constraints: BoxConstraints(
+                      minWidth: 14,
+                      minHeight: 14,
+                    ),
+                    child: Text(
+                      '$notificationCount',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 8,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(

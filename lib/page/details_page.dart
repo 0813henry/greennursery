@@ -186,7 +186,7 @@ class _DetailsPageState extends State<DetailsPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => CartPage(cartController: widget.cart),
+                        builder: (context) => CartPage(cartController: widget.cart, incrementNotificationCount: () {}),
                       ),
                     );
                   },
