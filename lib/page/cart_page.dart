@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:greennursery/data/cart_controller.dart';
-import 'package:greennursery/page/history_page.dart';
 import 'dart:math';
+import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CartPage extends StatefulWidget {
   final CartController cartController;
@@ -16,36 +17,15 @@ class CartPage extends StatefulWidget {
 
 class _CartPageState extends State<CartPage> {
   final TextEditingController _addressController = TextEditingController();
-  String _selectedPaymentMethod = 'Tarjeta';
-  final List<String> _paymentMethods = ['Tarjeta', 'Transferencia', 'Efectivo contra entrega'];
+  String? _selectedPaymentMethod;
+  final List<String> _paymentMethods = ['Tarjeta de Crédito', 'PayPal', 'Transferencia Bancaria'];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Carrito de Compras'),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => HistoryPage(cartController: widget.cartController),
-                  ),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text('Ver Historial'),
-            ),
-          ],
-        ),
+        title: const Text('Carrito de Compras'),
+        backgroundColor: Colors.green,
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: widget.cartController.getCartItems(),
@@ -184,7 +164,7 @@ class _CartPageState extends State<CartPage> {
                             border: OutlineInputBorder(),
                           ),
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         DropdownButtonFormField<String>(
                           value: _selectedPaymentMethod,
                           decoration: const InputDecoration(
@@ -203,7 +183,7 @@ class _CartPageState extends State<CartPage> {
                             });
                           },
                         ),
-                        SizedBox(height: 10),
+                        const SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
@@ -279,75 +259,62 @@ class _CartPageState extends State<CartPage> {
   Future<void> _removeFromCart(BuildContext context, String productId, int quantity) async {
     try {
       await widget.cartController.removeFromCart(productId);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Producto eliminado del carrito.')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Producto eliminado del carrito.')),
+      );
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al eliminar del carrito: $e')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al eliminar el producto del carrito: $e')),
+      );
     }
   }
 
   Future<void> _updateQuantity(BuildContext context, String productId, int quantity) async {
     try {
       await widget.cartController.updateQuantity(productId, quantity);
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Cantidad actualizada.')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cantidad actualizada.')),
+      );
     } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error al actualizar la cantidad: $e')),
-        );
-      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error al actualizar la cantidad: $e')),
+      );
     }
   }
 
   String _generateOrderId() {
     final random = Random();
-    final orderId = List<int>.generate(10, (_) => random.nextInt(10)).join();
+    final orderId = List.generate(10, (_) => random.nextInt(10)).join();
     return orderId;
   }
 
-  void _simulateOrderStatus(String orderId, List<String> plantNames) async {
-    final firestore = FirebaseFirestore.instance;
+  void _simulateOrderStatus(String orderId, List<String> plantNames) {
+    final statuses = ['Preparando envío', 'Pedido Enviado', 'Pedido Recibido'];
+    int statusIndex = 0;
+    final userId = FirebaseAuth.instance.currentUser?.uid;
 
-    for (String name in plantNames) {
-      await firestore.collection('notifications').add({
-        'orderId': orderId,
-        'plantName': name,
-        'status': 'Pedido en preparación',
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-    }
+    Timer.periodic(const Duration(seconds: 10), (timer) async {
+      if (statusIndex >= statuses.length) {
+        timer.cancel();
+        return;
+      }
 
-    Future.delayed(Duration(seconds: 10), () async {
-      for (String name in plantNames) {
-        await firestore.collection('notifications').add({
+      final status = statuses[statusIndex];
+      for (var plantName in plantNames) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .collection('notifications')
+            .add({
           'orderId': orderId,
-          'plantName': name,
-          'status': 'Pedido enviado',
+          'plantName': plantName,
+          'status': status,
           'timestamp': FieldValue.serverTimestamp(),
         });
       }
-    });
 
-    Future.delayed(Duration(seconds: 20), () async {
-      for (String name in plantNames) {
-        await firestore.collection('notifications').add({
-          'orderId': orderId,
-          'plantName': name,
-          'status': 'Pedido entregado',
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-      }
+      statusIndex++;
+      widget.incrementNotificationCount();
     });
   }
 }
