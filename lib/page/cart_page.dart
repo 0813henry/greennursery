@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:greennursery/data/cart_controller.dart';
 import 'dart:math';
-import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'notifications_page.dart';
 
 class CartPage extends StatefulWidget {
   final CartController cartController;
@@ -223,7 +222,7 @@ class _CartPageState extends State<CartPage> {
                                       SnackBar(content: Text('Pago realizado con éxito. Número de referencia: $orderId')),
                                     );
                                     widget.incrementNotificationCount();
-                                    _simulateOrderStatus(orderId, cartItems.map((item) => item['name'] as String).toList());
+                                    await NotificationsPage.sendOrderNotification(orderId, cartItems.map((item) => item['name'] as String).toList());
                                   }
                                 } catch (e) {
                                   if (context.mounted) {
@@ -286,35 +285,5 @@ class _CartPageState extends State<CartPage> {
     final random = Random();
     final orderId = List.generate(10, (_) => random.nextInt(10)).join();
     return orderId;
-  }
-
-  void _simulateOrderStatus(String orderId, List<String> plantNames) {
-    final statuses = ['Preparando envío', 'Pedido Enviado', 'Pedido Recibido'];
-    int statusIndex = 0;
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-
-    Timer.periodic(const Duration(seconds: 10), (timer) async {
-      if (statusIndex >= statuses.length) {
-        timer.cancel();
-        return;
-      }
-
-      final status = statuses[statusIndex];
-      for (var plantName in plantNames) {
-        await FirebaseFirestore.instance
-            .collection('users')
-            .doc(userId)
-            .collection('notifications')
-            .add({
-          'orderId': orderId,
-          'plantName': plantName,
-          'status': status,
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-      }
-
-      statusIndex++;
-      widget.incrementNotificationCount();
-    });
   }
 }

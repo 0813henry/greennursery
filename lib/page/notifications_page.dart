@@ -5,6 +5,22 @@ import 'package:firebase_auth/firebase_auth.dart';
 class NotificationsPage extends StatefulWidget {
   @override
   _NotificationsPageState createState() => _NotificationsPageState();
+
+  static Future<void> sendOrderNotification(String orderId, List<String> plantNames) async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+
+    for (var plantName in plantNames) {
+      await FirebaseFirestore.instance
+          .collection('notifications')
+          .add({
+        'userId': userId,
+        'orderId': orderId,
+        'plantName': plantName,
+        'status': 'El pedido se ha realizado exitosamente',
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    }
+  }
 }
 
 class _NotificationsPageState extends State<NotificationsPage> {
@@ -19,9 +35,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: FirebaseFirestore.instance
-            .collection('users')
-            .doc(_auth.currentUser?.uid)
             .collection('notifications')
+            .where('userId', isEqualTo: _auth.currentUser?.uid)
             .orderBy('timestamp', descending: true)
             .snapshots(),
         builder: (context, snapshot) {
@@ -48,8 +63,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 direction: DismissDirection.endToStart,
                 onDismissed: (direction) async {
                   await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(_auth.currentUser?.uid)
                       .collection('notifications')
                       .doc(notification.id)
                       .delete();

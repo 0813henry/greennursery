@@ -88,7 +88,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 child: GestureDetector(
                   onTap: _pickImage,
                   child: CircleAvatar(
-                    radius: 50,
+                    radius: 60,
                     backgroundImage: _imagePath != null
                         ? NetworkImage(_imagePath!)
                         : const AssetImage('assets/default_profile.png') as ImageProvider,
@@ -106,23 +106,21 @@ class _SettingsPageState extends State<SettingsPage> {
                   onPressed: _pickImage,
                   child: const Text(
                     'Cambiar Imagen de Perfil',
-                    style: TextStyle(color: Colors.white),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              Center(
-                child: TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Nombre de Usuario',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                    prefixIcon: const Icon(Icons.person),
-                    filled: true,
-                    fillColor: Colors.white,
+              const SizedBox(height: 20),
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: 'Nombre de Usuario',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
                   ),
+                  prefixIcon: const Icon(Icons.person),
+                  filled: true,
+                  fillColor: Colors.white,
                 ),
               ),
               const SizedBox(height: 20),
@@ -130,14 +128,21 @@ class _SettingsPageState extends State<SettingsPage> {
                 'Cambiar Color de Fondo',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
               ),
-              TextButton(
-                onPressed: _changeBackgroundColor,
-                child: const Text(
-                  'Seleccionar Color',
-                  style: TextStyle(color: Colors.white),
-                ),
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.green.shade700,
+              const SizedBox(height: 10),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _changeBackgroundColor,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                  ),
+                  child: const Text(
+                    'Seleccionar Color',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -152,47 +157,62 @@ class _SettingsPageState extends State<SettingsPage> {
                 },
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _saveSettings,
-                child: const Text('Guardar Configuraciones'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _saveSettings,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green.shade700,
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    shadowColor: Colors.green.shade900,
+                    elevation: 10,
                   ),
-                  backgroundColor: Colors.green.shade700,
-                  shadowColor: Colors.green.shade900,
-                  elevation: 10,
+                  child: const Text(
+                    'Guardar Configuraciones',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _deleteAccount,
-                child: const Text('Eliminar Cuenta'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+              Center(
+                child: ElevatedButton(
+                  onPressed: _deleteAccount,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    shadowColor: Colors.red,
+                    elevation: 10,
                   ),
-                  backgroundColor: Colors.redAccent,
-                  shadowColor: Colors.red,
-                  elevation: 10,
+                  child: const Text(
+                    'Eliminar Cuenta',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/login');
-                },
-                child: const Text('Cerrar Sesión'),
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
+              Center(
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/login');
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    shadowColor: Colors.red,
+                    elevation: 10,
                   ),
-                  backgroundColor: Colors.redAccent,
-                  shadowColor: Colors.red,
-                  elevation: 10,
+                  child: const Text(
+                    'Cerrar Sesión',
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
