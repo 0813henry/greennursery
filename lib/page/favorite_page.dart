@@ -43,10 +43,10 @@ class FavoritePage extends StatelessWidget {
                 name: favorite['name'],
                 imagePath: favorite['imagePath'],
                 category: favorite['category'],
-                description: '', // Puedes agregar más detalles si es necesario
-                price: 0.0, // Puedes agregar más detalles si es necesario
+                description: '', 
+                price: 0.0, 
                 isFavorit: true,
-                stock: 0, // Puedes agregar más detalles si es necesario
+                stock: 0, 
               );
 
               return ListTile(

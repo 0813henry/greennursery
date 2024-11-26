@@ -125,14 +125,14 @@ class _DetailsPageState extends State<DetailsPage> {
                           ),
                         ),
                         const SizedBox(height: 20.0),
-                        Text(
-                          'Treatment',
-                          style: TextStyle(
-                            color: black.withOpacity(0.9),
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        // Text(
+                        //   'Treatment',
+                        //   style: TextStyle(
+                        //     color: black.withOpacity(0.9),
+                        //     fontSize: 18.0,
+                        //     fontWeight: FontWeight.bold,
+                        //   ),
+                        // ),
                         const SizedBox(height: 20.0),
                         _buildRatingSection(context), // Sección de calificación
                         const SizedBox(height: 20.0),
@@ -160,7 +160,7 @@ class _DetailsPageState extends State<DetailsPage> {
                               Icon(Icons.comment, color: Colors.white), // Icono
                               SizedBox(width: 10),
                               Text(
-                                'View Comments',
+                                'Ver comentarios',
                                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                               ),
                             ],
@@ -235,7 +235,7 @@ class _DetailsPageState extends State<DetailsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Rate this plant',
+          'Califica esta planta',
           style: TextStyle(
             color: black.withOpacity(0.9),
             fontSize: 18.0,
@@ -263,7 +263,7 @@ class _DetailsPageState extends State<DetailsPage> {
           controller: commentController,
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
-            labelText: 'Leave a comment',
+            labelText: 'Deja un comentario',
           ),
           maxLines: 3,
         ),
@@ -287,7 +287,7 @@ class _DetailsPageState extends State<DetailsPage> {
               Icon(Icons.send, color: Colors.white), // Icono
               SizedBox(width: 10),
               Text(
-                'Submit',
+                'Enviar',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
@@ -323,7 +323,7 @@ class _DetailsPageState extends State<DetailsPage> {
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('You need to be logged in to submit a rating.'),
+            content: Text('Debe iniciar sesión para enviar una calificación.'),
           ),
         );
       }

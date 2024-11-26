@@ -73,7 +73,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
               children: [
                 const CircleAvatar(
                   radius: 60,
-                  backgroundImage: AssetImage('assets/images/logo.png'), // Asegúrate de tener un logo en assets
+                  backgroundImage: AssetImage('assets/images/logo.png'),
                 ),
                 const SizedBox(height: 20),
                 const Text(

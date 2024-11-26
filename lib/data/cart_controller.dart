@@ -1,4 +1,3 @@
-// lib/data/cart_controller.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'plant_model.dart';
 

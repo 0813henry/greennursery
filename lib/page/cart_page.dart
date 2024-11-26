@@ -3,12 +3,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:greennursery/data/cart_controller.dart';
 import 'dart:math';
 import 'notifications_page.dart';
+import 'history_page.dart'; // Importa la página de historial
 
 class CartPage extends StatefulWidget {
   final CartController cartController;
   final Function incrementNotificationCount;
 
-  const CartPage({Key? key, required this.cartController, required this.incrementNotificationCount}) : super(key: key);
+  const CartPage(
+      {Key? key,
+      required this.cartController,
+      required this.incrementNotificationCount})
+      : super(key: key);
 
   @override
   _CartPageState createState() => _CartPageState();
@@ -17,7 +22,11 @@ class CartPage extends StatefulWidget {
 class _CartPageState extends State<CartPage> {
   final TextEditingController _addressController = TextEditingController();
   String? _selectedPaymentMethod;
-  final List<String> _paymentMethods = ['Tarjeta de Crédito', 'PayPal', 'Transferencia Bancaria'];
+  final List<String> _paymentMethods = [
+    'Tarjeta de Crédito',
+    'PayPal',
+    'Transferencia Bancaria'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -25,6 +34,20 @@ class _CartPageState extends State<CartPage> {
       appBar: AppBar(
         title: const Text('Carrito de Compras'),
         backgroundColor: Colors.green,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () {
+              // Navega a la página de historial
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HistoryPage(cartController: widget.cartController), // Asegúrate de tener esta clase
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: StreamBuilder<QuerySnapshot>(
         stream: widget.cartController.getCartItems(),
@@ -46,8 +69,8 @@ class _CartPageState extends State<CartPage> {
               }
 
               double totalAmount = totalSnapshot.data ?? 0;
-              double tax = totalAmount * 0.15; // 15% tax
-              double shippingCost = 10.0; // Fixed shipping cost
+              double tax = totalAmount * 0.15; 
+              double shippingCost = 10.0; 
               double finalAmount = totalAmount + tax + shippingCost;
 
               return Column(
@@ -101,7 +124,8 @@ class _CartPageState extends State<CartPage> {
                         final itemTotal = price * quantity;
 
                         return Card(
-                          margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                          margin: const EdgeInsets.symmetric(
+                              vertical: 8, horizontal: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -110,7 +134,8 @@ class _CartPageState extends State<CartPage> {
                             contentPadding: const EdgeInsets.all(12),
                             title: Text(
                               name,
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                              style: const TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18),
                             ),
                             subtitle: Text(
                               'Precio: \$${price.toStringAsFixed(2)} x $quantity = \$${itemTotal.toStringAsFixed(2)}',
@@ -120,12 +145,16 @@ class _CartPageState extends State<CartPage> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.remove, color: Colors.red),
+                                  icon: const Icon(Icons.remove,
+                                      color: Colors.red),
                                   onPressed: () async {
                                     if (quantity > 1) {
-                                      await widget.cartController.updateQuantity(productId, quantity - 1);
+                                      await widget.cartController
+                                          .updateQuantity(
+                                              productId, quantity - 1);
                                     } else {
-                                      await _removeFromCart(context, productId, quantity);
+                                      await _removeFromCart(
+                                          context, productId, quantity);
                                     }
                                   },
                                 ),
@@ -134,15 +163,19 @@ class _CartPageState extends State<CartPage> {
                                   style: const TextStyle(fontSize: 18),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.add, color: Colors.green),
+                                  icon: const Icon(Icons.add,
+                                      color: Colors.green),
                                   onPressed: () async {
-                                    await _updateQuantity(context, productId, quantity + 1);
+                                    await _updateQuantity(
+                                        context, productId, quantity + 1);
                                   },
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.grey),
+                                  icon: const Icon(Icons.delete,
+                                      color: Colors.grey),
                                   onPressed: () async {
-                                    await _removeFromCart(context, productId, quantity);
+                                    await _removeFromCart(
+                                        context, productId, quantity);
                                   },
                                 ),
                               ],
@@ -192,20 +225,25 @@ class _CartPageState extends State<CartPage> {
                                   await widget.cartController.clearCart();
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Carrito vaciado con éxito.')),
+                                      const SnackBar(
+                                          content: Text(
+                                              'Carrito vaciado con éxito.')),
                                     );
                                   }
                                 } catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Error al vaciar el carrito: $e')),
+                                      SnackBar(
+                                          content: Text(
+                                              'Error al vaciar el carrito: $e')),
                                     );
                                   }
                                 }
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.red,
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -219,22 +257,33 @@ class _CartPageState extends State<CartPage> {
                                   await widget.cartController.makePayment();
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Pago realizado con éxito. Número de referencia: $orderId')),
+                                      SnackBar(
+                                          content: Text(
+                                              'Pago realizado con éxito. Número de referencia: $orderId')),
                                     );
                                     widget.incrementNotificationCount();
-                                    await NotificationsPage.sendOrderNotification(orderId, cartItems.map((item) => item['name'] as String).toList());
+                                    await NotificationsPage
+                                        .sendOrderNotification(
+                                            orderId,
+                                            cartItems
+                                                .map((item) =>
+                                                    item['name'] as String)
+                                                .toList());
                                   }
                                 } catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Error al realizar el pago: $e')),
+                                      SnackBar(
+                                          content: Text(
+                                              'Error al realizar el pago: $e')),
                                     );
                                   }
                                 }
                               },
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green,
-                                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24, vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -255,7 +304,8 @@ class _CartPageState extends State<CartPage> {
     );
   }
 
-  Future<void> _removeFromCart(BuildContext context, String productId, int quantity) async {
+  Future<void> _removeFromCart(
+      BuildContext context, String productId, int quantity) async {
     try {
       await widget.cartController.removeFromCart(productId);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -263,12 +313,14 @@ class _CartPageState extends State<CartPage> {
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error al eliminar el producto del carrito: $e')),
+        SnackBar(
+            content: Text('Error al eliminar el producto del carrito: $e')),
       );
     }
   }
 
-  Future<void> _updateQuantity(BuildContext context, String productId, int quantity) async {
+  Future<void> _updateQuantity(
+      BuildContext context, String productId, int quantity) async {
     try {
       await widget.cartController.updateQuantity(productId, quantity);
       ScaffoldMessenger.of(context).showSnackBar(

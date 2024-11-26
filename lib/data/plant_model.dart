@@ -1,5 +1,3 @@
-// lib/data/plant_model.dart
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Plants {
@@ -45,7 +43,7 @@ class Plants {
       'description': description,
       'price': price,
       'isFavorit': isFavorit,
-      'stock': stock, // Añadido
+      'stock': stock,
     };
   }
   // Método para copiar el objeto con nuevos valores
@@ -57,7 +55,7 @@ class Plants {
     String? description,
     double? price,
     bool? isFavorit,
-    int? stock, // Añadido
+    int? stock,
   }) {
     return Plants(
       id: id ?? this.id,
@@ -67,7 +65,7 @@ class Plants {
       description: description ?? this.description,
       price: price ?? this.price,
       isFavorit: isFavorit ?? this.isFavorit,
-      stock: stock ?? this.stock, // Añadido
+      stock: stock ?? this.stock,
     );
   }
 }

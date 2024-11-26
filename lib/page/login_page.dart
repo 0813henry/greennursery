@@ -21,7 +21,7 @@ class _LoginPageState extends State<LoginPage> {
 
   bool _isLoading = false; // Estado de carga
   final List<String> _adminEmails = [
-    'admin@gmail.com', // Cambia esto por los correos que deben tener acceso
+    'admin@gmail.com', // Correos que deben tener acceso administrativo
   ];
 
   /// Función para manejar el inicio de sesión.
